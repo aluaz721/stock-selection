@@ -1,0 +1,71 @@
+# Daily scheduled run: refresh data -> run selection -> log to MLflow ->
+# write output for the frontend. See PROJECT_PLAN.md's Cadence decision
+# for why daily (not hourly) is the right cadence for quarterly fundamentals.
+#
+# Honest state as of Phase 3: the "refresh" and "write output for frontend"
+# steps are placeholders, not yet real --
+#   - refresh needs app/data/refresh_fundamentals.py, deferred by choice:
+#     a real FMP key authenticates fine but its free tier returns 402 on
+#     every fundamentals endpoint the vendored fetch script needs (see
+#     PROJECT_PLAN.md's Live refresh decision) -- a yfinance adapter or a
+#     paid FMP plan would unblock this, neither built/purchased yet.
+#   - writing frontend output needs Phase 6's data contract, not designed
+#     yet.
+#   - MLflow tracking here is ephemeral (ordinary GitHub-hosted runner, no
+#     persistent volume) until Phase 5's docker-compose MLflow+Postgres
+#     server exists and MLFLOW_TRACKING_URI points at it as a repo secret
+#     -- until then this proves the mechanics run, not that runs
+#     accumulate anywhere meaningful across days.
+# The one real, tested step is running ml_bucket_selection.py and logging
+# it to MLflow (app/training/run_selection.py) against the DB already
+# committed... well, gitignored -- see below.
+
+name: Daily selection
+
+on:
+  schedule:
+    - cron: "0 13 * * 1-5" # 13:00 UTC, weekdays -- after US market data settles
+  workflow_dispatch: {}
+
+jobs:
+  daily-selection:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true # vendor/FinRL-Trading is a git submodule
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build local fundamentals DB
+        run: python -m app.data.build_fundamentals_db
+        # Rebuilds from vendor/FinRL-Trading/data/fundamental_data_full.csv
+        # every run, since data/finrl_trading.db is gitignored (see
+        # PROJECT_PLAN.md) and the runner starts from a clean checkout.
+        # Once refresh_fundamentals.py exists, it runs AFTER this step, to
+        # extend what this step just built rather than replace it.
+
+      # TODO (blocked on FMP_API_KEY): refresh with fundamentals filed
+      # since the bundled CSV's snapshot (through 2026-Q1).
+      # - name: Refresh fundamentals
+      #   env:
+      #     FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+      #   run: python -m app.data.refresh_fundamentals --db data/finrl_trading.db
+
+      - name: Run selection
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }} # unset -> local sqlite fallback (ephemeral on this runner)
+        run: python -m app.training.run_selection --db data/finrl_trading.db --val-cutoff 2025-09-30
+        # --val-cutoff is hardcoded for now -- needs to advance automatically
+        # as new quarters realize (see PROJECT_PLAN.md known risks: "advance
+        # by one quarter when the next tradedate becomes past"). Revisit once
+        # refresh_fundamentals.py exists and there's fresher data to cut over to.
+
+      # TODO (Phase 6): write today's predictions to data/predictions/ in
+      # whatever format the frontend consumes, then commit it (minimal
+      # tier) or push to Supabase/Postgres (fuller tier).

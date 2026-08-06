@@ -1,0 +1,37 @@
+# Runtime deps for our code. FinRL-Trading is vendored (vendor/FinRL-Trading/,
+# see PROJECT_PLAN.md "Vendoring" decision) -- its own requirements aren't
+# pulled in wholesale; we install what its vendored source needs only once
+# a given phase actually imports from it.
+
+# Core
+numpy>=1.24.0
+pandas>=2.0.0
+yfinance>=0.2.0
+python-dotenv>=1.0.0
+pytest>=7.4.0
+
+# Model (ml_bucket_selection.py's ensemble)
+# LightGBM over XGBoost: functionally equivalent choice per PROJECT_PLAN.md,
+# but XGBoost's manylinux wheel alone is ~57MB vs LightGBM's ~3MB -- picked
+# under a real disk-space constraint (see PROJECT_PLAN.md known risks).
+# ml_bucket_selection.py gracefully skips XGBoost if it's not installed.
+lightgbm>=4.0.0
+scikit-learn>=1.3.0
+mlflow>=2.14.0
+
+# BacktestEngine (FinRL-Trading's vendored src/backtest/backtest_engine.py,
+# used from Phase 2 onward)
+bt>=1.2.0
+scipy>=1.11.0
+matplotlib>=3.7.0
+pandas-market-calendars>=4.3.0
+
+# Frontend (Phase 6 minimal tier -- Streamlit Community Cloud)
+streamlit>=1.28.0
+
+# app/data/refresh_fundamentals.py's FMP path (deferred, see PROJECT_PLAN.md
+# Live refresh decision) -- not used by any code yet, kept declared since
+# a real key is already configured (.env) and validated against these.
+pydantic-settings>=2.1.0
+tzlocal>=5.0
+sqlalchemy>=2.0.0

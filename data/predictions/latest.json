@@ -1,0 +1,67 @@
+{
+  "as_of": "2026-03-31",
+  "vintage_breakdown": {
+    "2026-03-31": 78,
+    "2025-12-31": 425
+  },
+  "val_cutoff": "2025-09-30",
+  "generated_at": "2026-08-06T04:33:40.454078+00:00",
+  "buckets": {
+    "cyclical": [
+      {
+        "tic": "IVZ",
+        "predicted_return": 0.0905
+      },
+      {
+        "tic": "TROW",
+        "predicted_return": 0.0719
+      },
+      {
+        "tic": "ODFL",
+        "predicted_return": 0.0704
+      }
+    ],
+    "defensive": [
+      {
+        "tic": "BSX",
+        "predicted_return": 0.0329
+      },
+      {
+        "tic": "INCY",
+        "predicted_return": 0.0284
+      },
+      {
+        "tic": "CLX",
+        "predicted_return": 0.0281
+      }
+    ],
+    "growth_tech": [
+      {
+        "tic": "ON",
+        "predicted_return": 0.1264
+      },
+      {
+        "tic": "SATS",
+        "predicted_return": 0.1185
+      },
+      {
+        "tic": "HPQ",
+        "predicted_return": 0.0961
+      }
+    ],
+    "real_assets": [
+      {
+        "tic": "CF",
+        "predicted_return": 0.0563
+      },
+      {
+        "tic": "APA",
+        "predicted_return": 0.0557
+      },
+      {
+        "tic": "DD",
+        "predicted_return": 0.0493
+      }
+    ]
+  }
+}
