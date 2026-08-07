@@ -6,14 +6,6 @@
 # The `mlflow` service reuses this repo's own image (`build: .`) rather
 # than pulling a separate external MLflow image -- one Dockerfile, two
 # roles (training/inference vs. serving MLflow), selected by `command:`.
-#
-# NOT tested end-to-end in dev (this sandbox's clock is ~11 days behind
-# real time -- see PROJECT_PLAN.md known risks -- which currently blocks
-# Docker Hub registry pulls with a certificate error). Dockerfile's own
-# mechanics (COPY, pip install) were verified separately using a locally
-# cached substitute base image. This compose file follows MLflow's own
-# documented postgres-backend pattern closely; verify for real on a
-# machine/CI runner with a correctly synced clock before relying on it.
 
 services:
   postgres:

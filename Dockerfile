@@ -7,8 +7,7 @@
 #
 # vendor/FinRL-Trading is a git submodule: it must already be checked out
 # (`git submodule update --init`) in the build context before `docker
-# build` runs -- Docker doesn't resolve submodules itself, it just copies
-# whatever's on disk.
+# build` runs.
 
 FROM python:3.12-slim
 

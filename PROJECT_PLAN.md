@@ -230,13 +230,13 @@ drift-retrain-trading/
 │   │                              #   GET /metrics/performance
 │   └── db.py                      # Supabase/Neon Postgres client
 │
-├── frontend/                      # fuller-tier serving (Phase 6 stretch)
-│   ├── package.json               # React + Vite (or Next.js)
-│   ├── src/
-│   │   ├── App.tsx                # today's picks by bucket + rolling
-│   │   │                          #   performance-vs-S&P 500 chart
-│   │   └── api.ts                 # fetch wrapper for the FastAPI backend
-│   └── vite.config.ts
+├── frontend/                      # second minimal-tier frontend (Phase 6)
+│   ├── package.json               # Next.js + TypeScript + Tailwind + Recharts
+│   ├── scripts/sync-data.mjs      # copies ../data/predictions/*.json into
+│   │                              #   public/data/ (predev/prebuild)
+│   ├── lib/data.ts                # reads public/data/*.json server-side
+│   ├── components/                # MetricCard, PerformanceChart, PicksGrid
+│   └── app/page.tsx
 │
 ├── backtests/
 │   ├── run_backtest.py            # CLI: run BacktestEngine on
@@ -414,6 +414,20 @@ target, fuller tier is a stretch upgrade after something is live.
 - Not yet done: deploying to Streamlit Community Cloud (needs a GitHub
   push, not done this session) and wiring daily regeneration into the
   scheduled workflow (needs live refresh unblocked first).
+
+**Second frontend — done, verified**: `frontend/` — Next.js (App Router) +
+TypeScript + Tailwind + Recharts, chosen over Vite specifically for
+Vercel's zero-config native deploy path. Server Component reads
+`data/predictions/*.json` (copied into `public/data/` at build time by
+`scripts/sync-data.mjs`, wired as `predev`/`prebuild`) and statically
+renders the same content as the Streamlit app. Verified with a real
+production build (`next build`, static output) plus a Playwright
+screenshot pass in both light and dark mode — zero console errors, all
+metrics/chart/picks matched the JSON inputs. One real bug caught and fixed
+in that pass: Recharts animates lines drawing in by default, which made
+the first screenshot look like the line stopped mid-chart (it hadn't
+finished animating) — fixed with `isAnimationActive={false}`, the right
+call for a static dashboard anyway. Not yet deployed to Vercel.
 
 **Fuller tier (stretch, post-deadline)**:
 - Same cron job, writes to Supabase/Neon Postgres instead of committed

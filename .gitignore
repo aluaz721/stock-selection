@@ -8,3 +8,6 @@ mlflow.db
 mlruns/
 mlartifacts/
 data/finrl_trading.db
+frontend/AGENTS.md
+frontend/CLAUDE.md
+.claude/
