@@ -14,7 +14,6 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 import mlflow
 import pandas as pd
@@ -25,7 +24,7 @@ from app.config.vendor_path import VENDOR_FINRL_ROOT
 ML_BUCKET_SCRIPT = VENDOR_FINRL_ROOT / "src" / "strategies" / "ml_bucket_selection.py"
 
 
-def run_selection(db_path: Path, val_cutoff: str, work_dir: Optional[Path] = None) -> str:
+def run_selection(db_path: Path, val_cutoff: str, work_dir: Path | None = None) -> str:
     """Runs ml_bucket_selection.py --mixed-vintage against db_path, logs its
     outputs to MLflow, returns the MLflow run ID.
 
@@ -47,6 +46,9 @@ def run_selection(db_path: Path, val_cutoff: str, work_dir: Optional[Path] = Non
         ],
         capture_output=True,
         text=True,
+        check=False,  # exit code can be nonzero even on a successful run
+        # (e.g. the openpyxl-dependent Excel export failing after everything
+        # that matters already saved) -- we inspect the output files ourselves.
     )
 
     pred_files = sorted(work_dir.glob("sp500_ml_bucket_predictions_*.csv"))

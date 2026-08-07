@@ -1,3 +1,19 @@
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+# vendor/ is FinRL-Trading's own untouched source (see PROJECT_PLAN.md's
+# Reproducibility decision) -- never lint or fix it, that's not ours to
+# change and doing so would defeat the point of vendoring it unmodified.
+extend-exclude = ["vendor/"]
+
+[tool.ruff.lint]
+# E402 ("module level import not at top of file") is off by default in
+# ruff's selected rules -- turned on here because it's load-bearing: every
+# module that touches the vendored FinRL-Trading code calls
+# ensure_finrl_on_path() before importing anything under src.*, which
+# requires imports after code. The `# noqa: E402` comments on those
+# specific imports only mean something if this rule is actually checked.
+extend-select = ["E402"]

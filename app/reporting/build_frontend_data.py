@@ -30,10 +30,14 @@ ensure_finrl_on_path()
 
 from src.strategies.base_strategy import StrategyConfig  # noqa: E402
 
-from app.data.fetch_prices import drop_tickers_with_price_gaps, fetch_daily_prices
-from app.reporting.portfolio_history import compute_buy_and_hold_history, compute_portfolio_history, compute_stats
-from app.strategy.ml_bucket_strategy import MLBucketStrategy
-from backtests.run_backtest import build_weight_signals
+from app.data.fetch_prices import drop_tickers_with_price_gaps, fetch_daily_prices  # noqa: E402
+from app.reporting.portfolio_history import (  # noqa: E402
+    compute_buy_and_hold_history,
+    compute_portfolio_history,
+    compute_stats,
+)
+from app.strategy.ml_bucket_strategy import MLBucketStrategy  # noqa: E402
+from backtests.run_backtest import build_weight_signals  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = REPO_ROOT / "data" / "predictions"
@@ -96,6 +100,9 @@ def build_latest(db_path: Path, val_cutoff: str, work_dir: Path) -> None:
         ],
         capture_output=True,
         text=True,
+        check=False,  # exit code can be nonzero even on a successful run
+        # (e.g. the openpyxl-dependent Excel export failing after everything
+        # that matters already saved) -- we inspect the output files ourselves.
     )
     pred_files = sorted(out_dir.glob("sp500_ml_bucket_predictions_*.csv"))
     if not pred_files:

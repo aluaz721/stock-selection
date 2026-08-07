@@ -24,12 +24,15 @@ ensure_finrl_on_path()
 
 import src.backtest.backtest_engine as backtest_engine_module  # noqa: E402
 from src.backtest.backtest_engine import BacktestConfig, BacktestEngine  # noqa: E402
-from src.strategies.base_strategy import BaseStrategy, StrategyConfig, StrategyResult  # noqa: E402
-from src.strategies.ml_bucket_selection import datadate_to_tradedate  # noqa: E402
+from src.strategies.base_strategy import (  # noqa: E402
+    BaseStrategy,
+    StrategyConfig,
+    StrategyResult,
+)
 
-from app.data.fetch_prices import drop_tickers_with_price_gaps, fetch_daily_prices
-from app.strategy.ml_bucket_strategy import MLBucketStrategy
-from backtests.run_backtest import build_weight_signals, fetch_price_data_compat
+from app.data.fetch_prices import drop_tickers_with_price_gaps, fetch_daily_prices  # noqa: E402
+from app.strategy.ml_bucket_strategy import MLBucketStrategy  # noqa: E402
+from backtests.run_backtest import build_weight_signals, fetch_price_data_compat  # noqa: E402
 
 
 class EqualWeightUniverseStrategy(BaseStrategy):
@@ -65,7 +68,7 @@ class EqualWeightUniverseStrategy(BaseStrategy):
 
 def run_comparison(
     db_path: Path, infer_dates: list[str], top_n_per_bucket: int = 5, work_dir: Path | None = None
-) -> dict[str, "backtest_engine_module.BacktestResult"]:
+) -> dict[str, backtest_engine_module.BacktestResult]:
     backtest_engine_module.fetch_price_data = fetch_price_data_compat
     work_dir = Path(work_dir) if work_dir else Path(tempfile.mkdtemp(prefix="ml_bucket_"))
 

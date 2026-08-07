@@ -35,3 +35,8 @@ streamlit>=1.28.0
 pydantic-settings>=2.1.0
 tzlocal>=5.0
 sqlalchemy>=2.0.0
+
+# Phase 5 -- MLflow's postgres backend-store-uri needs a DBAPI driver to
+# actually connect (mlflow itself doesn't bundle one). psycopg2-binary
+# over psycopg2 to skip needing libpq-dev + a C compiler at install time.
+psycopg2-binary>=2.9.0

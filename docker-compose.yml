@@ -1,0 +1,51 @@
+# MLflow tracking server + Postgres backend -- gives runs a persistent
+# home instead of app/config/settings.py's local-sqlite fallback, and is
+# what unblocks Phase 3's "ephemeral tracking in CI" gap once
+# MLFLOW_TRACKING_URI (a repo secret in CI) points here.
+#
+# The `mlflow` service reuses this repo's own image (`build: .`) rather
+# than pulling a separate external MLflow image -- one Dockerfile, two
+# roles (training/inference vs. serving MLflow), selected by `command:`.
+#
+# NOT tested end-to-end in dev (this sandbox's clock is ~11 days behind
+# real time -- see PROJECT_PLAN.md known risks -- which currently blocks
+# Docker Hub registry pulls with a certificate error). Dockerfile's own
+# mechanics (COPY, pip install) were verified separately using a locally
+# cached substitute base image. This compose file follows MLflow's own
+# documented postgres-backend pattern closely; verify for real on a
+# machine/CI runner with a correctly synced clock before relying on it.
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: mlflow
+      POSTGRES_PASSWORD: mlflow
+      POSTGRES_DB: mlflow
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mlflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mlflow:
+    build: .
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://mlflow:mlflow@postgres:5432/mlflow
+      --default-artifact-root /mlartifacts
+      --host 0.0.0.0
+      --port 5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlartifacts:/mlartifacts
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  mlartifacts:

@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.git/
+mlruns/
+mlartifacts/
+mlflow.db
+data/cache/
+data/finrl_trading.db
+.env

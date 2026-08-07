@@ -16,7 +16,6 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, Optional
 
 import pandas as pd
 
@@ -24,7 +23,11 @@ from app.config.vendor_path import VENDOR_FINRL_ROOT, ensure_finrl_on_path
 
 ensure_finrl_on_path()
 
-from src.strategies.base_strategy import BaseStrategy, StrategyConfig, StrategyResult  # noqa: E402
+from src.strategies.base_strategy import (  # noqa: E402
+    BaseStrategy,
+    StrategyConfig,
+    StrategyResult,
+)
 
 ML_BUCKET_SCRIPT = VENDOR_FINRL_ROOT / "src" / "strategies" / "ml_bucket_selection.py"
 
@@ -52,7 +55,7 @@ class MLBucketStrategy(BaseStrategy):
         config: StrategyConfig,
         db_path: Path,
         top_n_per_bucket: int = 5,
-        work_dir: Optional[Path] = None,
+        work_dir: Path | None = None,
     ):
         super().__init__(config)
         self.db_path = Path(db_path)
@@ -60,7 +63,7 @@ class MLBucketStrategy(BaseStrategy):
         self.work_dir = Path(work_dir) if work_dir else Path(tempfile.mkdtemp(prefix="ml_bucket_"))
 
     def generate_weights(
-        self, data: Dict[str, pd.DataFrame], target_date: Optional[str] = None
+        self, data: dict[str, pd.DataFrame], target_date: str | None = None
     ) -> StrategyResult:
         if target_date is None:
             raise ValueError("MLBucketStrategy requires target_date (a quarter-end datadate)")
@@ -87,6 +90,9 @@ class MLBucketStrategy(BaseStrategy):
                 ],
                 capture_output=True,
                 text=True,
+                check=False,  # exit code can be nonzero even on a successful run (e.g.
+                # the openpyxl-dependent Excel export failing after everything that
+                # matters already saved) -- we inspect the output files ourselves.
             )
             pred_files = sorted(out_dir.glob("sp500_ml_bucket_predictions_*.csv"))
         else:

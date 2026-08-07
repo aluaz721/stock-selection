@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-from app.strategy.ml_bucket_strategy import MLBucketStrategy, previous_quarter_end
 from app.config.vendor_path import ensure_finrl_on_path
+from app.strategy.ml_bucket_strategy import MLBucketStrategy, previous_quarter_end
 
 ensure_finrl_on_path()
 from src.strategies.base_strategy import StrategyConfig  # noqa: E402

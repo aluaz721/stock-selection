@@ -317,15 +317,35 @@ updated content.
 - **Done, structural**: `.github/workflows/daily-selection.yml` — the
   `build_fundamentals_db` → `run_selection` chain is real; the refresh
   step and frontend-output step are documented placeholders (see below).
-- **Deferred by choice, not blocked**: `app/data/refresh_fundamentals.py`
+- **Deferred, now blocked two different ways**: `app/data/refresh_fundamentals.py`
   isn't built. A real FMP key is configured (`.env`, gitignored) and does
   authenticate, but its free tier returns 402 Payment Required on every
   fundamentals endpoint `fetch_and_store_fundamentals.py` needs (see Live
-  refresh decision above) — confirmed with a live call, not assumed. The
-  realistic path is a yfinance-based fundamentals adapter or a paid FMP
-  plan; deliberately deferred in favor of Phase 4/5/6, which don't need
-  fresher-than-Q1-2026 data to demonstrate the full MLOps loop. Revisit
-  when live refresh actually matters more than shipping the rest.
+  refresh decision above) — confirmed with a live call, not assumed.
+  The fallback, a yfinance-based fundamentals adapter, hit a *second*,
+  unrelated blocker in this dev sandbox specifically: `yfinance`'s
+  `.info` and `quarterly_income_stmt`/`quarterly_balance_sheet`/
+  `quarterly_cashflow` all route through Yahoo's cookie/crumb-authenticated
+  `quoteSummary` API, whose current TLS certificate has `notBefore=Aug 17
+  2026` — but this sandbox's system clock reads Aug 6 2026, ~11 days
+  behind. `chronyd` is running and correctly synced to a real NTP server
+  (confirmed via `chronyc tracking`: real time really is Aug 17), but the
+  system clock isn't being stepped to match, and there's no passwordless
+  `sudo` available to force it. This looks like a deliberate sandbox
+  behavior (pinning the visible date to match the session's fixed "today"
+  context) rather than ordinary drift, so it's not expected to resolve by
+  waiting. Plain price downloads (`yf.download()`, used everywhere else in
+  this project) apparently hit a different endpoint/cert and are
+  unaffected — only the fundamentals-specific auth flow is blocked.
+  **Not a yfinance data-availability problem** — most of the 52 factors
+  are standard, computable ratios (gross margin, ROE, FCF/share, asset
+  turnover) from raw statement line items, not exotic; a handful (PEG,
+  debt service coverage, solvency ratio) use ambiguous industry
+  conventions and won't exactly match FMP's numbers regardless of this
+  blocker. Next step whenever revisited: verify field coverage on a
+  machine with a correctly-synced clock before writing the ~30-40 formula
+  implementations, same "verify before building" discipline as everywhere
+  else in this project.
 - **Blocked on Phase 6 design**: writing predictions to `data/predictions/`
   in whatever shape the frontend consumes.
 - **Deferred**: MLflow tracking is currently ephemeral in CI (no
@@ -340,12 +360,34 @@ updated content.
   observability, not a retraining gate (see Retraining decision above).
 - Optional Prometheus/Grafana visualization of the above.
 
-### Phase 5 — Deployment
-- `Dockerfile` for training/serving.
-- `docker-compose.yml`: MLflow server + Postgres backend (tracking store
-  only).
-- `.github/workflows/ci.yml`: lint, unit tests, backtest-validation run on
-  PRs touching strategy/selection code.
+### Phase 5 — Deployment — done, partially verified
+- `Dockerfile`: training/inference image (no FastAPI service exists, so
+  this runs pipeline scripts on demand, not a long-lived server). Its
+  mechanics (COPY, `pip install -r requirements.txt`) were verified by
+  building against a locally-cached Python 3.12 base image and confirming
+  every dependency installs cleanly — building from the real `python:3.12-slim`
+  wasn't possible in this sandbox (see below).
+- `docker-compose.yml`: MLflow server + Postgres backend, reusing this
+  repo's own image (`build: .`) for the `mlflow` service via a `command:`
+  override rather than pulling a separate external MLflow image. Follows
+  MLflow's standard documented postgres-backend pattern; **not run
+  end-to-end** (see below).
+- `.github/workflows/ci.yml`: lint (`ruff`, newly configured —
+  `pyproject.toml`), unit tests, and a 2-quarter backtest smoke test (not
+  the full 36-quarter history, which takes ~70 min — this just catches
+  "does the pipeline still run," not performance regressions).
+- **Real, sandbox-specific blocker hit and documented**: `docker build`
+  against the real `python:3.12-slim` base failed with a certificate
+  error identical in kind to the yfinance-fundamentals blocker above —
+  Docker Hub's registry-auth certificate has `notBefore=Aug 8 2026`,
+  this sandbox's clock reads Aug 6. Confirmed this blocks *any* fresh
+  Docker Hub pull here, not just this one base image. Verified the
+  Dockerfile's actual mechanics anyway by temporarily building against a
+  different, already-cached local image, then reverted to the correct,
+  portable `python:3.12-slim` base for the real file (untested end-to-end
+  as a result). GitHub Actions runners have their own correctly-synced
+  clocks and are not expected to hit this — likely fine in real CI, just
+  unverified locally.
 
 ### Phase 6 — Live prediction serving
 Portfolio-piece-with-a-deadline framing unchanged: minimal tier is the

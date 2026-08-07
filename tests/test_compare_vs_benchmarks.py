@@ -5,7 +5,7 @@ from app.config.vendor_path import ensure_finrl_on_path
 ensure_finrl_on_path()
 from src.strategies.base_strategy import StrategyConfig  # noqa: E402
 
-from backtests.compare_vs_benchmarks import EqualWeightUniverseStrategy
+from backtests.compare_vs_benchmarks import EqualWeightUniverseStrategy  # noqa: E402
 
 
 class TestEqualWeightUniverseStrategy:

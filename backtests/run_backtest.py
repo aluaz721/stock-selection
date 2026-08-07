@@ -29,8 +29,8 @@ from src.backtest.backtest_engine import BacktestConfig, BacktestEngine  # noqa:
 from src.strategies.base_strategy import StrategyConfig  # noqa: E402
 from src.strategies.ml_bucket_selection import datadate_to_tradedate  # noqa: E402
 
-from app.data.fetch_prices import drop_tickers_with_price_gaps, fetch_daily_prices
-from app.strategy.ml_bucket_strategy import MLBucketStrategy
+from app.data.fetch_prices import drop_tickers_with_price_gaps, fetch_daily_prices  # noqa: E402
+from app.strategy.ml_bucket_strategy import MLBucketStrategy  # noqa: E402
 
 
 def fetch_price_data_compat(tickers, start_date, end_date, preferred_source=None) -> pd.DataFrame:
@@ -59,7 +59,7 @@ def build_weight_signals(strategy: MLBucketStrategy, infer_dates: list[str]) -> 
 
 def run_backtest(
     db_path: Path, infer_dates: list[str], top_n_per_bucket: int = 5
-) -> "backtest_engine_module.BacktestResult":
+) -> backtest_engine_module.BacktestResult:
     backtest_engine_module.fetch_price_data = fetch_price_data_compat
 
     strategy = MLBucketStrategy(

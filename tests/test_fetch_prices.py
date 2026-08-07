@@ -4,7 +4,12 @@ import pandas as pd
 import pytest
 
 import app.data.fetch_prices as fetch_prices_module
-from app.data.fetch_prices import PRICE_COLUMNS, drop_tickers_with_price_gaps, fetch_daily_prices, to_yfinance_symbol
+from app.data.fetch_prices import (
+    PRICE_COLUMNS,
+    drop_tickers_with_price_gaps,
+    fetch_daily_prices,
+    to_yfinance_symbol,
+)
 
 
 def make_yfinance_download_output(tics_and_bases: dict[str, float], n_days: int = 3) -> pd.DataFrame:
